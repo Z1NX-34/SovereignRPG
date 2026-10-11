@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="sovereignclassui"
+version="1.0.0"
+displayName="Sovereign Class UI"
+description='''Re-skins the screens of the Class Selection Mod (classes, races, sides) with textured gold-and-violet panels.
+Textures can be overridden by any resource pack. Not affiliated with the Class Selection Mod authors.'''
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.sovereignclassui]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.sovereignclassui]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.sovereignclassui]]
+modId="classmod"
+mandatory=true
+versionRange="[1.6.0]"
+ordering="AFTER"
+side="CLIENT"
