@@ -57,4 +57,20 @@ public abstract class GuiThemeMixin {
     private static void sov$current(CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(Skin.GOLD & 0xFFFFFF);
     }
+
+    // Class cards and selection outlines derive their colours from these; pull them toward gold too.
+    @Inject(method = "accentFrom(I)I", at = @At("RETURN"), cancellable = true, remap = false)
+    private static void sov$accentFrom(int in, CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(Skin.blend(cir.getReturnValueI(), 0xE8B028, 0.7f));
+    }
+
+    @Inject(method = "borderFrom(I)I", at = @At("RETURN"), cancellable = true, remap = false)
+    private static void sov$borderFrom(int in, CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(Skin.blend(cir.getReturnValueI(), 0xB88A20, 0.7f));
+    }
+
+    @Inject(method = "highlightFrom(I)I", at = @At("RETURN"), cancellable = true, remap = false)
+    private static void sov$highlightFrom(int in, CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(Skin.blend(cir.getReturnValueI(), 0xFFCD46, 0.7f));
+    }
 }

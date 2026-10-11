@@ -12,6 +12,8 @@ public abstract class LayoutMixin {
     @Inject(method = "outerPad(Lnet/minecraft/client/Minecraft;II)I", at = @At("RETURN"), cancellable = true, remap = false)
     private static void sov$pad(net.minecraft.client.Minecraft mc, int w, int h, CallbackInfoReturnable<Integer> cir) {
         int inset = Math.max(8, Math.min(30, Math.min(w, h) / 9));
-        cir.setReturnValue(cir.getReturnValueI() + inset);
+        int v = cir.getReturnValueI() + inset;
+        com.sovereign.classui.Skin.lastPad = v;
+        cir.setReturnValue(v);
     }
 }

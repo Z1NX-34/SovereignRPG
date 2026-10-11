@@ -27,6 +27,9 @@ public final class Skin {
     public static final ResourceLocation C_BL = t("corner_bl");
     public static final ResourceLocation C_BR = t("corner_br");
 
+    /** Last value returned by the patched GuiLayout.outerPad (the header banner's inset). */
+    public static volatile int lastPad = 0;
+
     public static final int CORNER = 40;
     public static final int GOLD = 0xFFE8B028;
     public static final int GOLD_DARK = 0xFF824F10;
