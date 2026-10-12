@@ -45,7 +45,7 @@ public final class RaceView {
         l.pad = Skin.lastPad > 0 ? Skin.lastPad : 28;
         l.count = Math.max(1, count);
         l.btnY = h - l.pad - btnH;
-        l.detH = h >= 300 ? 82 : 62;
+        l.detH = h >= 300 ? 112 : 70;
         l.detY = l.btnY - 6 - l.detH;
         int top = l.pad + l.headerH + 8;
         int block = l.detY - 8 - top;
@@ -88,7 +88,15 @@ public final class RaceView {
     }
     private static final Map<String, Tex> CACHE = new HashMap<>();
 
-    public static void reset() { CACHE.clear(); }
+    private static int descScroll, descLines, descVis, lastSel = -2;
+
+    public static void reset() { CACHE.clear(); descScroll = 0; }
+
+    public static boolean scroll(Screen s, double mx, double my, double delta) {
+        if (descLines <= descVis) return false;
+        descScroll = Math.max(0, Math.min(descLines - descVis, descScroll - (int) Math.signum(delta)));
+        return true;
+    }
 
     private static String clean(String id) {
         StringBuilder sb = new StringBuilder();
@@ -157,16 +165,25 @@ public final class RaceView {
         // details panel
         Skin.nine(g, Skin.PANEL, l.detX, l.detY, l.detW, l.detH, 8, 32);
         int tx = l.detX + 14, tw = l.detW - 28;
+        if (selected != lastSel) { lastSel = selected; descScroll = 0; }
         if (selected >= 0 && selected < races.size()) {
             String[] r = read(races.get(selected));
             g.drawString(font, Component.literal(r[1]).withStyle(st -> st.withBold(true)), tx, l.detY + 9, GOLD_TXT, false);
             g.fill(tx, l.detY + 21, tx + tw, l.detY + 22, 0xAAE8B028);
-            int y = l.detY + 28;
-            int maxY = l.detY + l.detH - 10;
-            for (FormattedCharSequence line : font.split(FormattedText.of(r[2]), Math.max(40, tw))) {
-                if (y + 8 > maxY) break;
-                g.drawString(font, line, tx, y, TEXT, false);
-                y += 11;
+            int top = l.detY + 28, bottom = l.detY + l.detH - 16;   // bottom strip is reserved for the hint
+            int vis = Math.max(1, (bottom - top) / 11);
+            List<FormattedCharSequence> all = font.split(FormattedText.of(r[2]), Math.max(40, tw - 6));
+            descLines = all.size(); descVis = vis;
+            descScroll = Math.max(0, Math.min(descScroll, all.size() - vis));
+            for (int i = 0; i < vis && i + descScroll < all.size(); i++) {
+                g.drawString(font, all.get(i + descScroll), tx, top + i * 11, TEXT, false);
+            }
+            if (all.size() > vis) {   // scroll bar + hint so the text never just stops
+                int bx = tx + tw - 2, bh = vis * 11;
+                g.fill(bx, top, bx + 2, top + bh, 0x55000000);
+                int th = Math.max(8, bh * vis / all.size());
+                g.fill(bx, top + (bh - th) * descScroll / Math.max(1, all.size() - vis), bx + 2, top + (bh - th) * descScroll / Math.max(1, all.size() - vis) + th, Skin.GOLD);
+                g.drawString(font, "scroll for more", tx, l.detY + l.detH - 12, 0xFF9C8FC0, false);
             }
             if (!tex(r[0]).custom) {
                 String hint = "image: textures/gui/race/" + clean(r[0]) + ".png";

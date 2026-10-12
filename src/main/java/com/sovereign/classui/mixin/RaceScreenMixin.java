@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /** Race screen: two (or more) big square image cards side by side instead of the list. */
 @Mixin(targets = "com.example.classmod.client.screen.RaceSelectionScreen", remap = false)
@@ -41,6 +42,11 @@ public abstract class RaceScreenMixin {
     private void sov$render(GuiGraphics g, int mx, int my, float pt, CallbackInfo ci) {
         RaceView.draw((Screen) (Object) this, races, raceButtons, selectedIndex, g, mx, my, pt);
         ci.cancel();
+    }
+
+    @Inject(method = "m_6050_(DDD)Z", at = @At("HEAD"), cancellable = true, remap = false)
+    private void sov$wheel(double mx, double my, double delta, CallbackInfoReturnable<Boolean> cir) {
+        if (RaceView.scroll((Screen) (Object) this, mx, my, delta)) cir.setReturnValue(true);
     }
 
     /**

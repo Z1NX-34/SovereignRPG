@@ -107,6 +107,7 @@ public final class ClassView {
         for (int i = 0; i < lines.size() && i < maxLines; i++) {
             g.drawString(font, lines.get(i), x, ly + i * 10, TEXT, false);
         }
+        if (lines.size() > maxLines) g.drawString(font, "\u2026", x + leftW - 8, ly + (maxLines - 1) * 10, HEAD, false);
         if (!wide) return;
 
         int gapX = 14;
