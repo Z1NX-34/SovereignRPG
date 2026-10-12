@@ -87,11 +87,11 @@ public final class Skin {
         g.fill(m + 3, m + 3, w - m - 3, m + 4, GOLD_DARK);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        int c = CORNER;
-        g.blit(C_TL, m - 1, m - 1, 0, 0, c, c, c, c);
-        g.blit(C_TR, w - m + 1 - c, m - 1, 0, 0, c, c, c, c);
-        g.blit(C_BL, m - 1, h - m + 1 - c, 0, 0, c, c, c, c);
-        g.blit(C_BR, w - m + 1 - c, h - m + 1 - c, 0, 0, c, c, c, c);
+        int c = 34;  // drawn slightly smaller than the 40px texture so the header banner does not cover it
+        g.blit(C_TL, m - 1, m - 1, c, c, 0, 0, 40, 40, 40, 40);
+        g.blit(C_TR, w - m + 1 - c, m - 1, c, c, 0, 0, 40, 40, 40, 40);
+        g.blit(C_BL, m - 1, h - m + 1 - c, c, c, 0, 0, 40, 40, 40, 40);
+        g.blit(C_BR, w - m + 1 - c, h - m + 1 - c, c, c, 0, 0, 40, 40, 40, 40);
     }
 
     private static void rectLine(GuiGraphics g, int x0, int y0, int x1, int y1, int col) {

@@ -35,3 +35,15 @@ Keep the sizes (or change the numbers in `Skin.java`).
 Written against class mod 1.6.0 only. If the class mod updates and renames methods the game will
 crash on load with a mixin error (deliberate, so it is not silent). Not compiled or run by the author
 of this file - first build may need small fixes.
+
+
+## Update 2 (race cards, bigger class panel)
+
+* **Race screen** is now big square cards side by side. Put a picture for each race at
+  `assets/sovereignclassui/textures/gui/race/<race id>.png` (square, 256x256 is ideal; any size works,
+  it is stretched to the square). Your texture pack can supply them. When a race has no picture, a default
+  emblem is shown and the panel tells you the exact file name it is looking for.
+  Bundled placeholders: `human`, `humans`, `god`, `gods`, `_default`.
+* **Class screen**: details panel no longer overlaps the cards, is taller, and the attribute section is a
+  3-column grid that scrolls with the mouse wheel (so many attributes fit). Starter kit is listed under it.
+* Hint / counter texts are brighter. Frame padding reduced.
