@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
  * Class screen, "one class at a time" layout:
  *   left   Equipment (starter kit) + Special abilities (the class's passive description)
  *   centre name, tags, model preview, < n / N >, description
- *   right  Attributes with bars (scrolls)
+ *   right  Attributes as a striped list (scrolls)
  * Everything about the classes is read through reflection, so the class mod is never a build dependency.
  */
 public final class ClassPager {
@@ -51,7 +51,7 @@ public final class ClassPager {
         int descH = Math.max(46, l.h * 28 / 100);
         l.descBottom = l.bottom - 8;
         l.descTop = l.descBottom - descH;
-        l.navY = l.descTop - 18;
+        l.navY = l.descTop - 32;
         l.modelBottom = l.navY - 6;
         return l;
     }
@@ -168,18 +168,20 @@ public final class ClassPager {
         panel(g, l.lx, py, l.lw, ph, "Special abilities", f);
         String pass = str(call(def, "getPassiveDescription"));
         if (pass.isBlank()) { g.drawString(f, "—", l.lx + 14, py + 26, DIM, false); return; }
-        List<FormattedCharSequence> lines = f.split(FormattedText.of(pass), l.lw - 28);
+        List<FormattedCharSequence> lines = f.split(FormattedText.of(pass), l.lw - 34);
         int vis = Math.max(1, (ph - 32) / 10);
         passScroll = Math.max(0, Math.min(passScroll, lines.size() - vis));
         for (int i = 0; i < vis && i + passScroll < lines.size(); i++) g.drawString(f, lines.get(i + passScroll), l.lx + 14, py + 26 + i * 10, TEXT, false);
-        if (lines.size() > vis) scrollBar(g, l.lx + l.lw - 10, py + 24, vis * 10, vis, lines.size(), passScroll);
+        if (lines.size() > vis) scrollBar(g, l.lx + l.lw - 13, py + 24, vis * 10, vis, lines.size(), passScroll);
     }
 
     private static void scrollBar(GuiGraphics g, int x, int y, int h, int vis, int total, int pos) {
-        g.fill(x, y, x + 2, y + h, 0x55000000);
-        int th = Math.max(8, h * vis / total);
+        g.fill(x - 1, y - 1, x + 4, y + h + 1, 0xAA0A0614);
+        g.fill(x, y, x + 3, y + h, 0xFF2A1F4A);
+        int th = Math.max(12, h * vis / total);
         int ty = y + (h - th) * pos / Math.max(1, total - vis);
-        g.fill(x, ty, x + 2, ty + th, Skin.GOLD);
+        g.fill(x, ty, x + 3, ty + th, Skin.GOLD);
+        g.fill(x, ty, x + 3, ty + 1, 0xFFFFE9A8);
     }
 
     private static void drawCentre(GuiGraphics g, Font f, Lay l, Object def, int n, int sel, int mx, int my) {
@@ -209,18 +211,21 @@ public final class ClassPager {
         arrow(g, f, l.cx + l.cw - 14 - 22, ay, false, mx, my);
         g.drawCenteredString(f, Component.literal((sel + 1) + " / " + n), pcx, ay + 3, TEXT);
         if (n <= 12) {
-            int dw = n * 8, dx = pcx - dw / 2 + 2;
-            for (int i = 0; i < n; i++) g.fill(dx + i * 8, ay + 14, dx + i * 8 + 4, ay + 16, i == sel ? Skin.GOLD : 0xFF46386C);
+            int dx = pcx - n * 8 / 2 + 1;
+            for (int i = 0; i < n; i++) {
+                int x = dx + i * 8;
+                g.fill(x, ay + 20, x + 6, ay + 23, i == sel ? Skin.GOLD : 0xFF46386C);
+            }
         }
 
         // description
         int dy = l.descTop;
         g.fill(l.cx + 10, dy - 3, l.cx + l.cw - 10, dy - 2, 0x66E8B028);
-        List<FormattedCharSequence> lines = f.split(FormattedText.of(str(call(def, "getDescription"))), l.cw - 30);
+        List<FormattedCharSequence> lines = f.split(FormattedText.of(str(call(def, "getDescription"))), l.cw - 36);
         int vis = Math.max(1, (l.descBottom - dy) / 10);
         descScroll = Math.max(0, Math.min(descScroll, lines.size() - vis));
         for (int i = 0; i < vis && i + descScroll < lines.size(); i++) g.drawString(f, lines.get(i + descScroll), l.cx + 14, dy + i * 10, TEXT, false);
-        if (lines.size() > vis) scrollBar(g, l.cx + l.cw - 12, dy, vis * 10, vis, lines.size(), descScroll);
+        if (lines.size() > vis) scrollBar(g, l.cx + l.cw - 13, dy, vis * 10, vis, lines.size(), descScroll);
     }
 
     private static void arrow(GuiGraphics g, Font f, int x, int y, boolean left, int mx, int my) {
@@ -231,23 +236,22 @@ public final class ClassPager {
 
     private static void drawRight(GuiGraphics g, Font f, Lay l, int mx, int my) {
         panel(g, l.rx, l.top, l.rw, l.h, "Attributes", f);
-        int y0 = l.top + 26, rowH = 20;
+        int y0 = l.top + 28, rowH = 18;
         int vis = Math.max(1, (l.bottom - 8 - y0) / rowH);
         attrScroll = Math.max(0, Math.min(attrScroll, cAttr.size() - vis));
         if (cAttr.isEmpty()) g.drawString(f, "—", l.rx + 14, y0, DIM, false);
-        int bx = l.rx + 14, bw = l.rw - 28 - (cAttr.size() > vis ? 6 : 0);
+        boolean sb = cAttr.size() > vis;
+        int bx = l.rx + 12, bw = l.rw - 24 - (sb ? 8 : 0);
         for (int i = 0; i < vis && i + attrScroll < cAttr.size(); i++) {
             String[] a = cAttr.get(i + attrScroll);
             int y = y0 + i * rowH;
+            if (((i + attrScroll) & 1) == 0) g.fill(bx - 2, y - 3, bx + bw + 2, y + rowH - 3, 0x33000000);
             String val = a[1];
-            g.drawString(f, f.plainSubstrByWidth(a[0], bw - f.width(val) - 8), bx, y, TEXT, false);
-            g.drawString(f, val, bx + bw - f.width(val), y, HEAD, false);
-            int fill = (int) (bw * Double.parseDouble(a[2]));
-            g.fill(bx, y + 11, bx + bw, y + 14, 0xFF140C26);
-            g.fill(bx, y + 11, bx + fill, y + 14, 0xFFE8B028);
-            g.fill(bx, y + 11, bx + fill, y + 12, 0xFFFFD66E);
+            int col = val.startsWith("-") ? 0xFFFF8A80 : val.startsWith("+") ? 0xFF9BE58F : HEAD;
+            g.drawString(f, f.plainSubstrByWidth(a[0], bw - f.width(val) - 10), bx + 2, y + 1, TEXT, false);
+            g.drawString(f, val, bx + bw - f.width(val) - 2, y + 1, col, false);
         }
-        if (cAttr.size() > vis) scrollBar(g, l.rx + l.rw - 12, y0, vis * rowH, vis, cAttr.size(), attrScroll);
+        if (sb) scrollBar(g, l.rx + l.rw - 13, y0 - 3, vis * rowH, vis, cAttr.size(), attrScroll);
     }
 
     // ---------- input ----------
@@ -260,10 +264,10 @@ public final class ClassPager {
             if (mx >= l.cx + 14 && mx < l.cx + 36) return sel <= 0 ? n - 1 : sel - 1;
             if (mx >= l.cx + l.cw - 36 && mx < l.cx + l.cw - 14) return sel >= n - 1 ? 0 : sel + 1;
         }
-        if (n <= 12 && my >= ay + 12 && my < ay + 18) {
-            int pcx = l.cx + l.cw / 2, dx = pcx - n * 8 / 2 + 2;
+        if (n <= 12 && my >= ay + 17 && my < ay + 26) {
+            int pcx = l.cx + l.cw / 2, dx = pcx - n * 8 / 2 + 1;
             int i = (int) Math.floor((mx - dx) / 8.0);
-            if (i >= 0 && i < n && mx - dx - i * 8 < 6) return i;
+            if (i >= 0 && i < n && mx - dx - i * 8 < 7) return i;
         }
         return -1;
     }

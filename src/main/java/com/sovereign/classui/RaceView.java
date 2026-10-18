@@ -88,9 +88,10 @@ public final class RaceView {
     }
     private static final Map<String, Tex> CACHE = new HashMap<>();
 
+    private static int lastHover = -1;
     private static int descScroll, descLines, descVis, lastSel = -2;
 
-    public static void reset() { CACHE.clear(); descScroll = 0; }
+    public static void reset() { CACHE.clear(); descScroll = 0; lastHover = -1; }
 
     public static boolean scroll(Screen s, double mx, double my, double delta) {
         if (descLines <= descVis) return false;
@@ -165,24 +166,28 @@ public final class RaceView {
         // details panel
         Skin.nine(g, Skin.PANEL, l.detX, l.detY, l.detW, l.detH, 8, 32);
         int tx = l.detX + 14, tw = l.detW - 28;
-        if (selected != lastSel) { lastSel = selected; descScroll = 0; }
-        if (selected >= 0 && selected < races.size()) {
-            String[] r = read(races.get(selected));
+        if (hover >= 0) lastHover = hover;
+        int shown = hover >= 0 ? hover : selected >= 0 ? selected : lastHover;   // hovering previews a race
+        if (shown != lastSel) { lastSel = shown; descScroll = 0; }
+        if (shown >= 0 && shown < races.size()) {
+            String[] r = read(races.get(shown));
             g.drawString(font, Component.literal(r[1]).withStyle(st -> st.withBold(true)), tx, l.detY + 9, GOLD_TXT, false);
             g.fill(tx, l.detY + 21, tx + tw, l.detY + 22, 0xAAE8B028);
             int top = l.detY + 28, bottom = l.detY + l.detH - 16;   // bottom strip is reserved for the hint
             int vis = Math.max(1, (bottom - top) / 11);
-            List<FormattedCharSequence> all = font.split(FormattedText.of(r[2]), Math.max(40, tw - 6));
+            List<FormattedCharSequence> all = font.split(FormattedText.of(r[2]), Math.max(40, tw - 14));
             descLines = all.size(); descVis = vis;
             descScroll = Math.max(0, Math.min(descScroll, all.size() - vis));
             for (int i = 0; i < vis && i + descScroll < all.size(); i++) {
                 g.drawString(font, all.get(i + descScroll), tx, top + i * 11, TEXT, false);
             }
             if (all.size() > vis) {   // scroll bar + hint so the text never just stops
-                int bx = tx + tw - 2, bh = vis * 11;
-                g.fill(bx, top, bx + 2, top + bh, 0x55000000);
-                int th = Math.max(8, bh * vis / all.size());
-                g.fill(bx, top + (bh - th) * descScroll / Math.max(1, all.size() - vis), bx + 2, top + (bh - th) * descScroll / Math.max(1, all.size() - vis) + th, Skin.GOLD);
+                int bx = tx + tw - 3, bh = vis * 11;
+                g.fill(bx - 1, top - 1, bx + 4, top + bh + 1, 0xAA0A0614);
+                g.fill(bx, top, bx + 3, top + bh, 0xFF2A1F4A);
+                int th = Math.max(12, bh * vis / all.size());
+                int ty = top + (bh - th) * descScroll / Math.max(1, all.size() - vis);
+                g.fill(bx, ty, bx + 3, ty + th, Skin.GOLD);
                 g.drawString(font, "scroll for more", tx, l.detY + l.detH - 12, 0xFF9C8FC0, false);
             }
             if (!tex(r[0]).custom) {
@@ -190,7 +195,7 @@ public final class RaceView {
                 g.drawString(font, hint, l.detX + l.detW - 14 - font.width(hint), l.detY + l.detH - 12, 0xFF9C8FC0, false);
             }
         } else {
-            g.drawCenteredString(font, Component.translatable("classmod.race.no_selection"), l.detX + l.detW / 2, l.detY + l.detH / 2 - 4, TEXT);
+            g.drawCenteredString(font, Component.literal("Hover a race to preview it, click to choose"), l.detX + l.detW / 2, l.detY + l.detH / 2 - 4, 0xFFB9A9D8);
         }
 
         // confirm / cancel (the race buttons themselves are drawn as cards above)
