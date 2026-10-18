@@ -172,16 +172,17 @@ public final class ClassPager {
         int vis = Math.max(1, (ph - 32) / 10);
         passScroll = Math.max(0, Math.min(passScroll, lines.size() - vis));
         for (int i = 0; i < vis && i + passScroll < lines.size(); i++) g.drawString(f, lines.get(i + passScroll), l.lx + 14, py + 26 + i * 10, TEXT, false);
-        if (lines.size() > vis) scrollBar(g, l.lx + l.lw - 13, py + 24, vis * 10, vis, lines.size(), passScroll);
+        scrollBar(g, l.lx + l.lw - 13, py + 24, vis * 10, vis, lines.size(), passScroll);
     }
 
     private static void scrollBar(GuiGraphics g, int x, int y, int h, int vis, int total, int pos) {
         g.fill(x - 1, y - 1, x + 4, y + h + 1, 0xAA0A0614);
         g.fill(x, y, x + 3, y + h, 0xFF2A1F4A);
-        int th = Math.max(12, h * vis / total);
-        int ty = y + (h - th) * pos / Math.max(1, total - vis);
-        g.fill(x, ty, x + 3, ty + th, Skin.GOLD);
-        g.fill(x, ty, x + 3, ty + 1, 0xFFFFE9A8);
+        boolean more = total > vis;
+        int th = more ? Math.max(12, h * vis / total) : h;
+        int ty = more ? y + (h - th) * pos / Math.max(1, total - vis) : y;
+        g.fill(x, ty, x + 3, ty + th, more ? Skin.GOLD : 0xFF6A5A2A);
+        if (more) g.fill(x, ty, x + 3, ty + 1, 0xFFFFE9A8);
     }
 
     private static void drawCentre(GuiGraphics g, Font f, Lay l, Object def, int n, int sel, int mx, int my) {
@@ -225,7 +226,7 @@ public final class ClassPager {
         int vis = Math.max(1, (l.descBottom - dy) / 10);
         descScroll = Math.max(0, Math.min(descScroll, lines.size() - vis));
         for (int i = 0; i < vis && i + descScroll < lines.size(); i++) g.drawString(f, lines.get(i + descScroll), l.cx + 14, dy + i * 10, TEXT, false);
-        if (lines.size() > vis) scrollBar(g, l.cx + l.cw - 13, dy, vis * 10, vis, lines.size(), descScroll);
+        scrollBar(g, l.cx + l.cw - 13, dy, vis * 10, vis, lines.size(), descScroll);
     }
 
     private static void arrow(GuiGraphics g, Font f, int x, int y, boolean left, int mx, int my) {
@@ -240,7 +241,7 @@ public final class ClassPager {
         int vis = Math.max(1, (l.bottom - 8 - y0) / rowH);
         attrScroll = Math.max(0, Math.min(attrScroll, cAttr.size() - vis));
         if (cAttr.isEmpty()) g.drawString(f, "—", l.rx + 14, y0, DIM, false);
-        boolean sb = cAttr.size() > vis;
+        boolean sb = true;
         int bx = l.rx + 12, bw = l.rw - 24 - (sb ? 8 : 0);
         for (int i = 0; i < vis && i + attrScroll < cAttr.size(); i++) {
             String[] a = cAttr.get(i + attrScroll);
@@ -251,7 +252,7 @@ public final class ClassPager {
             g.drawString(f, f.plainSubstrByWidth(a[0], bw - f.width(val) - 10), bx + 2, y + 1, TEXT, false);
             g.drawString(f, val, bx + bw - f.width(val) - 2, y + 1, col, false);
         }
-        if (sb) scrollBar(g, l.rx + l.rw - 13, y0 - 3, vis * rowH, vis, cAttr.size(), attrScroll);
+        scrollBar(g, l.rx + l.rw - 13, y0 - 3, vis * rowH, vis, cAttr.size(), attrScroll);
     }
 
     // ---------- input ----------

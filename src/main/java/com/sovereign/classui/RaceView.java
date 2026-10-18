@@ -37,7 +37,8 @@ public final class RaceView {
         public int pad, headerH = 38, cardsY, size, plate = 20, gap, x0, count;
         public int detX, detY, detW, detH, btnY;
         public int cardX(int i) { return x0 + i * (size + gap); }
-        public int cardH() { return size + plate; }
+        public int ch;
+        public int cardH() { return ch; }
     }
 
     public static Layout layout(int w, int h, int count, int btnH) {
@@ -45,20 +46,15 @@ public final class RaceView {
         l.pad = Skin.lastPad > 0 ? Skin.lastPad : 28;
         l.count = Math.max(1, count);
         l.btnY = h - l.pad - btnH;
-        l.detH = h >= 300 ? 112 : 70;
-        l.detY = l.btnY - 6 - l.detH;
-        int top = l.pad + l.headerH + 8;
-        int block = l.detY - 8 - top;
-        int s = Math.max(48, Math.min(150, block - l.plate));
+        int top = l.pad + l.headerH + 10;
+        int block = l.btnY - 10 - top;
+        l.gap = Math.max(12, Math.min(28, w / 50));
         int availW = w - 2 * l.pad - 16;
-        l.gap = Math.max(14, Math.min(44, s / 3));
-        int byW = (availW - (l.count - 1) * l.gap) / l.count;
-        l.size = Math.max(40, Math.min(s, byW));
+        l.size = Math.max(80, Math.min(300, (availW - (l.count - 1) * l.gap) / l.count));
+        l.ch = Math.max(120, Math.min(420, block));
         int total = l.count * l.size + (l.count - 1) * l.gap;
         l.x0 = (w - total) / 2;
-        l.cardsY = top + Math.max(0, (block - (l.size + l.plate)) / 2);
-        l.detW = Math.min(w - 2 * l.pad, Math.max(total + 90, 360));
-        l.detX = (w - l.detW) / 2;
+        l.cardsY = top + Math.max(0, (block - l.ch) / 2);
         return l;
     }
 
@@ -156,46 +152,12 @@ public final class RaceView {
 
         // cards
         int hover = -1;
+        if (selected != lastSel) { lastSel = selected; descScroll = 0; }
         for (int i = 0; i < races.size(); i++) {
             int x = l.cardX(i), y = l.cardsY;
             boolean over = mx >= x && mx < x + l.size && my >= y && my < y + l.cardH();
             if (over) hover = i;
-            card(g, font, l, i, x, y, over, i == selected, selected >= 0, read(races.get(i)));
-        }
-
-        // details panel
-        Skin.nine(g, Skin.PANEL, l.detX, l.detY, l.detW, l.detH, 8, 32);
-        int tx = l.detX + 14, tw = l.detW - 28;
-        if (hover >= 0) lastHover = hover;
-        int shown = hover >= 0 ? hover : selected >= 0 ? selected : lastHover;   // hovering previews a race
-        if (shown != lastSel) { lastSel = shown; descScroll = 0; }
-        if (shown >= 0 && shown < races.size()) {
-            String[] r = read(races.get(shown));
-            g.drawString(font, Component.literal(r[1]).withStyle(st -> st.withBold(true)), tx, l.detY + 9, GOLD_TXT, false);
-            g.fill(tx, l.detY + 21, tx + tw, l.detY + 22, 0xAAE8B028);
-            int top = l.detY + 28, bottom = l.detY + l.detH - 16;   // bottom strip is reserved for the hint
-            int vis = Math.max(1, (bottom - top) / 11);
-            List<FormattedCharSequence> all = font.split(FormattedText.of(r[2]), Math.max(40, tw - 14));
-            descLines = all.size(); descVis = vis;
-            descScroll = Math.max(0, Math.min(descScroll, all.size() - vis));
-            for (int i = 0; i < vis && i + descScroll < all.size(); i++) {
-                g.drawString(font, all.get(i + descScroll), tx, top + i * 11, TEXT, false);
-            }
-            if (all.size() > vis) {   // scroll bar + hint so the text never just stops
-                int bx = tx + tw - 3, bh = vis * 11;
-                g.fill(bx - 1, top - 1, bx + 4, top + bh + 1, 0xAA0A0614);
-                g.fill(bx, top, bx + 3, top + bh, 0xFF2A1F4A);
-                int th = Math.max(12, bh * vis / all.size());
-                int ty = top + (bh - th) * descScroll / Math.max(1, all.size() - vis);
-                g.fill(bx, ty, bx + 3, ty + th, Skin.GOLD);
-                g.drawString(font, "scroll for more", tx, l.detY + l.detH - 12, 0xFF9C8FC0, false);
-            }
-            if (!tex(r[0]).custom) {
-                String hint = "image: textures/gui/race/" + clean(r[0]) + ".png";
-                g.drawString(font, hint, l.detX + l.detW - 14 - font.width(hint), l.detY + l.detH - 12, 0xFF9C8FC0, false);
-            }
-        } else {
-            g.drawCenteredString(font, Component.literal("Hover a race to preview it, click to choose"), l.detX + l.detW / 2, l.detY + l.detH / 2 - 4, 0xFFB9A9D8);
+            card(g, font, l, x, y, over, i == selected, selected >= 0, read(races.get(i)));
         }
 
         // confirm / cancel (the race buttons themselves are drawn as cards above)
@@ -204,43 +166,54 @@ public final class RaceView {
         }
     }
 
-    private static void card(GuiGraphics g, Font font, Layout l, int i, int x, int y, boolean over, boolean sel, boolean anySel, String[] r) {
+    private static void card(GuiGraphics g, Font font, Layout l, int x, int y, boolean over, boolean sel, boolean anySel, String[] r) {
         int w = l.size, h = l.cardH();
         int gold = Skin.GOLD;
-        if (sel) { // soft outer glow
-            g.fill(x - 3, y - 3, x + w + 3, y + h + 3, 0x33E8B028);
-            g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0x55E8B028);
+        if (sel) {
+            g.fill(x - 4, y - 4, x + w + 4, y + h + 4, 0x33E8B028);
+            g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0x66E8B028);
         }
         Skin.nine(g, Skin.CARD, x, y, w, h, 6, 32);
 
-        int ix = x + 5, iy = y + 5, iw = w - 10, ih = w - 10;
-        g.fill(ix, iy, ix + iw, iy + ih, 0xFF0A0614);
+        int iw = w - 16;
+        int side = sel ? Math.max(48, Math.min(iw, h * 42 / 100)) : Math.max(48, Math.min(iw, h - 58));
+        int ix = x + (w - side) / 2, iy = y + 8;
+        g.fill(ix, iy, ix + side, iy + side, 0xFF0A0614);
         Tex t = tex(r[0]);
         if (t.loc != null) {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            g.blit(t.loc, ix, iy, iw, ih, 0, 0, t.w, t.h, t.w, t.h);
+            g.blit(t.loc, ix, iy, side, side, 0, 0, t.w, t.h, t.w, t.h);
         }
-        // inner frame
         int fc = sel ? gold : (over ? 0xFFFFCD46 : 0xFF824F10);
-        g.fill(ix, iy, ix + iw, iy + 1, fc);
-        g.fill(ix, iy + ih - 1, ix + iw, iy + ih, fc);
-        g.fill(ix, iy, ix + 1, iy + ih, fc);
-        g.fill(ix + iw - 1, iy, ix + iw, iy + ih, fc);
-        if (sel) {
-            g.fill(ix + 1, iy + 1, ix + iw - 1, iy + 2, gold);
-            g.fill(ix + 1, iy + ih - 2, ix + iw - 1, iy + ih - 1, gold);
-            g.fill(ix + 1, iy + 1, ix + 2, iy + ih - 1, gold);
-            g.fill(ix + iw - 2, iy + 1, ix + iw - 1, iy + ih - 1, gold);
-        }
-        if (over && !sel) g.fill(ix + 1, iy + 1, ix + iw - 1, iy + ih - 1, 0x22FFFFFF);
-        if (anySel && !sel && !over) g.fill(ix + 1, iy + 1, ix + iw - 1, iy + ih - 1, 0x66000000);
+        g.fill(ix, iy, ix + side, iy + 1, fc);
+        g.fill(ix, iy + side - 1, ix + side, iy + side, fc);
+        g.fill(ix, iy, ix + 1, iy + side, fc);
+        g.fill(ix + side - 1, iy, ix + side, iy + side, fc);
+        if (over && !sel) g.fill(ix + 1, iy + 1, ix + side - 1, iy + side - 1, 0x22FFFFFF);
+        if (anySel && !sel && !over) g.fill(ix + 1, iy + 1, ix + side - 1, iy + side - 1, 0x66000000);
 
-        // name plate
-        int py = y + w - 3;
-        String name = r[1];
-        int col = sel ? GOLD_TXT : TEXT;
-        g.drawCenteredString(font, Component.literal(name).withStyle(st -> st.withBold(true)), x + w / 2, py + (l.plate - 8) / 2 + 1, col);
+        int ny = iy + side + 8;
+        g.drawCenteredString(font, Component.literal(r[1]).withStyle(st -> st.withBold(true)), x + w / 2, ny, sel ? GOLD_TXT : TEXT);
+        if (!sel) {
+            g.drawCenteredString(font, Component.literal("Click to learn more"), x + w / 2, ny + 13, 0xFF9C8FC0);
+            descLines = 0; 
+            return;
+        }
+        g.fill(x + 12, ny + 13, x + w - 12, ny + 14, 0xAAE8B028);
+        int top = ny + 20, bottom = y + h - 10;
+        int vis = Math.max(1, (bottom - top) / 11);
+        List<FormattedCharSequence> all = font.split(FormattedText.of(r[2]), Math.max(40, w - 40));
+        descLines = all.size(); descVis = vis;
+        descScroll = Math.max(0, Math.min(descScroll, all.size() - vis));
+        for (int i = 0; i < vis && i + descScroll < all.size(); i++) g.drawString(font, all.get(i + descScroll), x + 16, top + i * 11, TEXT, false);
+        int bx = x + w - 14, bh = vis * 11;
+        g.fill(bx - 1, top - 1, bx + 4, top + bh + 1, 0xAA0A0614);
+        g.fill(bx, top, bx + 3, top + bh, 0xFF2A1F4A);
+        boolean more = all.size() > vis;
+        int th = more ? Math.max(12, bh * vis / all.size()) : bh;
+        int ty = more ? top + (bh - th) * descScroll / Math.max(1, all.size() - vis) : top;
+        g.fill(bx, ty, bx + 3, ty + th, more ? gold : 0xFF6A5A2A);
     }
 
     /** Footer buttons are created by the class mod; keep them inside the frame. */
